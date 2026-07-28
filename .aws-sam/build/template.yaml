@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Serverless Student Registration Application
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: python3.12
+Resources:
+  StudentTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: StudentTable
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+  StudentRegistrationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: StudentRegistrationFunction
+      CodeUri: StudentRegistrationFunction
+      Handler: app.lambda_handler
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: StudentTable
+      Environment:
+        Variables:
+          TABLE_NAME: StudentTable
+      Events:
+        CreateStudent:
+          Type: Api
+          Properties:
+            Path: /students
+            Method: post
+    Metadata:
+      SamResourceId: StudentRegistrationFunction
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/students
